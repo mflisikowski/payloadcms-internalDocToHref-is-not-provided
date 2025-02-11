@@ -1,6 +1,6 @@
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 
-import { DefaultNodeTypes } from '@payloadcms/richtext-lexical'
+import { DefaultNodeTypes, SerializedLinkNode } from '@payloadcms/richtext-lexical'
 
 import {
   RichText as RichTextWithoutBlocks,
@@ -8,9 +8,23 @@ import {
   LinkJSXConverter,
 } from '@payloadcms/richtext-lexical/react'
 
+const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }): string => {
+  const { value, relationTo } = linkNode.fields.doc!
+
+  if (typeof value !== 'object') {
+    throw new Error('Expected value to be an object')
+  }
+
+  if (relationTo === 'media') {
+    return value.url as string
+  }
+
+  return `/${value.id}`
+}
+
 const jsxConverters: JSXConvertersFunction<DefaultNodeTypes> = ({ defaultConverters }) => ({
-  ...LinkJSXConverter,
   ...defaultConverters,
+  ...LinkJSXConverter({ internalDocToHref }), // need to be a second argument
 })
 
 type Props = {
